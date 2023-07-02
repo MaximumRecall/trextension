@@ -1,0 +1,24 @@
+{
+    "manifest_version": 2,
+    "name": "Total Recall",
+    "description": "This extension processes and stores articles",
+    "version": "1.0",
+    "background": {
+        "scripts": ["background.js"],
+        "persistent": false
+    },
+    "permissions": [
+        "storage",
+        "tabs",
+        "<API endpoint URL>",
+        "webNavigation",
+        "http://*/*",
+        "https://*/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ]
+}

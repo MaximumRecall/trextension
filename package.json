@@ -1,0 +1,16 @@
+{
+  "name": "firefox-extension",
+  "version": "1.0.0",
+  "description": "A Firefox extension",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "web-ext": "^6.4.0"
+  }
+}
