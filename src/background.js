@@ -25,8 +25,43 @@ checkUserId().catch(err => console.error(err));
 //
 // Completion listener
 //
+function sendMessageWithRetry(tab, message, retries = 3) {
+    console.log("Sending message to tab " + tab + ": " + tab.id)
+    browser.tabs.sendMessage(tab.id, message)
+        .catch(err => {
+            if (retries > 0) {
+                setTimeout(() => {
+                    sendMessageWithRetry(tab, message, retries - 1);
+                }, 100);
+            } else {
+                console.error("Unable to notify completion for " + tab.url + ": " + err);
+            }
+        });
+}
+
+function isSpecialUrl(url) {
+    const specialProtocols = [
+        'about:',
+        'moz-extension:',
+        'view-source:',
+        'chrome:',
+        'file:',
+        'chrome-extension:',
+        'chrome-devtools:'
+    ];
+
+    for (const protocol of specialProtocols) {
+        if (url.startsWith(protocol)) {
+            console.log("Ignoring special URL: " + url)
+            return true;
+        }
+    }
+
+    return false;
+}
+
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status == 'complete' && tab.active) {
-        browser.tabs.sendMessage(tabId, {action: "TabUpdated"});
+    if (changeInfo.status == 'complete' && !isSpecialUrl(tab.url)) {
+        sendMessageWithRetry(tab, {action: "TabUpdated"});
     }
 });
