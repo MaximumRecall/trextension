@@ -1,31 +1,4 @@
 //
-// Generate and save user_id
-//
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0,
-            v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-async function checkUserId() {
-    let data = await browser.storage.local.get('user_id');
-
-    if (!data.user_id) {
-        let user_id = generateUUID();
-        await browser.storage.local.set({ user_id });
-    }
-    console.log(ext_name + " User ID: " + data.user_id);
-}
-
-// On extension startup
-browser.runtime.onStartup.addListener(checkUserId);
-
-// On extension installation
-browser.runtime.onInstalled.addListener(checkUserId);
-
-//
 // Save articles when background.js sends a TabUpdated message
 //
 browser.runtime.onMessage.addListener(
@@ -38,7 +11,7 @@ browser.runtime.onMessage.addListener(
 );
 
 async function maybe_save_url(currentUrl) {
-    let data = await browser.storage.local.get([currentUrl, 'user_id']);
+    let data = await browser.storage.local.get([currentUrl, 'user']);
     if (data[currentUrl] === undefined) {
         const pageContent = document.documentElement.outerHTML;
 
@@ -50,13 +23,14 @@ async function maybe_save_url(currentUrl) {
             body: JSON.stringify({
                 url: currentUrl,
                 html_content: pageContent,
-                user_id: data.user_id
+                user_id: data.user.id
             })
         })
             .then(response => response.json())
             .then(url_data => {
                 console.assert(url_data && url_data.saved !== undefined,
-                    "Unexpected response " + url_data);
+                    "Unexpected response " + url_data + " for url " + currentUrl);
+                console.log(currentUrl + " -> " + url_data.saved);
                 const saveObj = {};
                 saveObj[currentUrl] = url_data.saved;
                 browser.storage.local.set(saveObj);
