@@ -25,8 +25,31 @@ checkUserId().catch(err => console.error(err));
 //
 // Completion listener
 //
+let ports = {};
+
+// content page will call connect when it loads
+browser.runtime.onConnect.addListener((port) => {
+    console.log("Connected to tab " + port.sender.tab.id)
+    ports[port.sender.tab.id] = port;
+    port.onDisconnect.addListener(() => {
+        delete ports[port.sender.tab.id];
+    });
+});
+
+function sendTabUpdatedMessage(tabId) {
+    if (ports[tabId]) {
+        ports[tabId].postMessage({action: "TabUpdated"});
+        console.log("Message sent successfully")
+    } else {
+        // Wait a moment and try again
+        console.log("Waiting for content script to load")
+        setTimeout(() => sendTabUpdatedMessage(tabId), 100);
+    }
+}
+
 browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-    if (changeInfo.status == 'complete' && tab.active) {
-        browser.tabs.sendMessage(tabId, {action: "TabUpdated"});
+    if (changeInfo.status == 'complete') {
+        console.log("Tab " + tabId + " at " + tab.url + " complete")
+        sendTabUpdatedMessage(tabId);
     }
 });

@@ -1,14 +1,13 @@
 //
 // Save articles when background.js sends a TabUpdated message
 //
-browser.runtime.onMessage.addListener(
-    function(request, sender, sendResponse) {
-        if (request.action === "TabUpdated") {
-            const currentUrl = window.location.href;
-            maybe_save_url(currentUrl);
-        }
+let port = browser.runtime.connect();
+port.onMessage.addListener((message) => {
+    if (message.action === "TabUpdated") {
+        const currentUrl = window.location.href;
+        maybe_save_url(currentUrl);
     }
-);
+});
 
 async function maybe_save_url(currentUrl) {
     if(currentUrl.startsWith(service_url)) {
