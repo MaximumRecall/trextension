@@ -47,7 +47,8 @@ function isSpecialUrl(url) {
         'chrome:',
         'file:',
         'chrome-extension:',
-        'chrome-devtools:'
+        'chrome-devtools:',
+        service_url
     ];
 
     for (const protocol of specialProtocols) {
