@@ -11,6 +11,10 @@ browser.runtime.onMessage.addListener(
 );
 
 async function maybe_save_url(currentUrl) {
+    if(currentUrl.startsWith(service_url)) {
+        return;
+    }
+
     let data = await browser.storage.local.get([currentUrl, 'user']);
     if (data[currentUrl] === undefined) {
         const pageContent = document.documentElement.outerHTML;
