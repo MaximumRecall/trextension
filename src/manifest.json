@@ -10,7 +10,7 @@
     "permissions": [
         "storage",
         "tabs",
-        "<API endpoint URL>",
+        "http://192.168.1.83:5000",
         "webNavigation",
         "http://*/*",
         "https://*/*"
@@ -18,7 +18,7 @@
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["content.js"]
+            "js": ["config.js", "content.js"]
         }
     ]
 }
