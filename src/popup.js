@@ -6,13 +6,13 @@ document.getElementById('search-history').addEventListener('click', async functi
 document.getElementById('index-history').addEventListener('click', async function() {
     console.log("Indexing history");
     let historyItems = await browser.history.search({text: '', startTime: 0});
-    console.log("Indexing history with " + historyItems.length + " items");
 
     // Create a queue to hold the history items
     let queue = Array.from(historyItems);
 
     // Create a new window and open the first 5 tabs
     try {
+        console.log("Indexing history with " + historyItems.length + " items");
         let window = await browser.windows.create();
         console.log("opening first 5 tabs");
         for (let i = 0; i < Math.min(5, queue.length); i++) {
@@ -21,7 +21,7 @@ document.getElementById('index-history').addEventListener('click', async functio
             openTab(url, window.id);
         }
     } catch (err) {
-        console.error(err);
+        console.error("Error opening history window: " + err);
     }
 
     // Define the function for opening a tab and setting up the listener
