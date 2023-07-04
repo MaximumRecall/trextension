@@ -47,41 +47,42 @@ function isSpecialUrl(url) {
     return false;
 }
 
-let tabContent = {};
+let tabPaths = {};
+let pathContents = {};
 let inactivityTimers = {};
-let savingPromises = {};
 
 function getTabTextWithRetry(tab, retries=3) {
     browser.tabs.executeScript(tab.id, {
         code: 'document.documentElement.innerText;'
     }).then((results) => {
-        // results is an array of tab HTML content strings
         if (results[0] === undefined) {
             console.log("TR " + tab.url + " text is undefined");
             return;
         }
         if (results[0] !== "") {
             let urlObj = new URL(tab.url);
+            let newPath = urlObj.host + urlObj.pathname;
             let newContent = {
                 text: results[0],
                 url: tab.url,
-                path: urlObj.host + urlObj.pathname, // This includes the server name
-                title: tab.title
+                title: tab.title,
+                path: newPath
             };
-            if (tabContent[tab.id] !== undefined && tabContent[tab.id].path !== newContent.path) {
-                console.log("TR " + tab.id + " path changed to " + newContent.path);
-                savingPromises[tab.id] = saveText(tabContent[tab.id]);
+            if (tabPaths[tab.id] !== undefined && tabPaths[tab.id] !== newPath) {
+                console.log("TR " + tab.id + " path changed to " + newPath);
+                saveText(pathContents[tabPaths[tab.id]]);
             }
-            console.log("TR " + tab.id + " text updated for " + newContent.path)
-            tabContent[tab.id] = newContent;
+            console.log("TR " + tab.id + " text updated for " + newPath);
+            tabPaths[tab.id] = newPath;
+            pathContents[newPath] = newContent;
         }
 
         if (inactivityTimers[tab.id]) {
             clearTimeout(inactivityTimers[tab.id]);
         }
         inactivityTimers[tab.id] = setTimeout(() => {
-            console.log("TR timer saving " + tab.id)
-            savingPromises[tab.id] = saveText(tabContent[tab.id]);
+            console.log("TR timer saving " + tab.id);
+            saveText(pathContents[tabPaths[tab.id]]);
         }, 60000);  // 1 minute
     }).catch(err => {
         if (retries > 0) {
@@ -94,8 +95,8 @@ function getTabTextWithRetry(tab, retries=3) {
     });
 }
 
-async function saveText(tabContent) {
-    console.log("TR saving " + tabContent.url);
+async function saveText(content) {
+    console.log("TR saving " + content.url);
     let data = await browser.storage.local.get('user');
 
     return fetch(service_url + '/save_if_article', {
@@ -104,24 +105,23 @@ async function saveText(tabContent) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            url: tabContent.url,
-            title: tabContent.title,
-            text_content: tabContent.text,
+            url: content.url,
+            title: content.title,
+            text_content: content.text,
             user_id: data.user.id
         })
     })
         .then(response => response.json())
         .then(url_data => {
             console.assert(url_data && url_data.saved !== undefined,
-                "Unexpected response " + url_data + " for url " + tabContent.url);
-            console.log("TR " + tabContent.url + " -> " + url_data.saved);
+                "Unexpected response " + url_data + " for url " + content.url);
+            console.log("TR " + content.url + " -> " + url_data.saved);
         })
         .catch(err => console.error("TR " + err))
         .finally(() => {
-            console.log("TR save complete for " + tabContent.url);
-            delete tabContent[tabContent.url];
-            delete inactivityTimers[tabContent.url];
-            delete savingPromises[tabContent.url];
+            console.log("TR save complete for " + content.url);
+            delete pathContents[content.path];
+            delete inactivityTimers[content.path];
         });
 }
 
@@ -129,21 +129,12 @@ browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status !== 'complete' || isSpecialUrl(tab.url)) {
         return;
     }
-
-    // If a save operation is ongoing when the tab updates, we wait for it to finish
-    if (savingPromises[tabId]) {
-        savingPromises[tabId].then(() => getTabTextWithRetry(tab));
-    } else {
-        getTabTextWithRetry(tab);
-    }
+    getTabTextWithRetry(tab);
 });
 
 browser.tabs.onRemoved.addListener((tabId) => {
-    console.log("TR tab " + tabId + " removed")
-    if (tabContent[tabId]) {
-        if (savingPromises[tabId]) {
-            return;
-        }
-        savingPromises[tabId] = saveText(tabContent[tabId]);
+    console.log("TR tab " + tabId + " removed");
+    if (tabPaths[tabId]) {
+        saveText(pathContents[tabPaths[tabId]]);
     }
 });
