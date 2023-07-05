@@ -7,3 +7,5 @@ Click on the extension button, then "Search" to search your history.
 When installing for the first time, you may also want to click "Index History" to index pages from your saved browser history.
 
 To install it, go to `about:debug`, click on This Firefox, then "Load temporary add-on" and select the manifest.json from this repo. 
+
+To use a different server, edit the `server` variable in `config.js`.
