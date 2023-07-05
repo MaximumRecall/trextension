@@ -99,7 +99,7 @@ async function saveText(content) {
     console.log("TR saving " + content.url);
     let data = await browser.storage.local.get('user');
 
-    return fetch(service_url + '/save_if_article', {
+    return fetch(service_url + '/save_if_new', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
