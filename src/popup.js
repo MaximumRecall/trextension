@@ -10,6 +10,13 @@ document.getElementById('index-history').addEventListener('click', async functio
     // Create a queue to hold the history items
     let queue = Array.from(historyItems, item => item.url);
 
+    // get the progress bar element
+    let progressBar = document.getElementById('progress-bar');
+    // set the max value to the number of items
+    progressBar.max = historyItems.length;
+    // show the progress bar
+    progressBar.style.display = 'block';
+
     // Open the first 5 tabs
     try {
         console.log("opening first 5 tabs");
@@ -34,6 +41,8 @@ document.getElementById('index-history').addEventListener('click', async functio
                     if (queue.length > 0) {
                         openTab(queue.shift());
                     }
+                    // Update the progress bar value
+                    progressBar.value++;
                 }
             };
 
@@ -42,5 +51,6 @@ document.getElementById('index-history').addEventListener('click', async functio
             .catch(err => console.error("Error creating tab: " + err));
     }
 });
+
 
 
