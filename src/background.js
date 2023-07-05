@@ -69,7 +69,7 @@ function getTabTextWithRetry(tab, retries=3) {
                 path: newPath
             };
             if (tabPaths[tab.id] !== undefined && tabPaths[tab.id] !== newPath) {
-                console.log("TR " + tab.id + " path changed to " + newPath);
+                console.log("TR " + tab.id + " path changed to " + newPath + " (saving old path " + tabPaths[tab.id] + ")");
                 saveText(pathContents[tabPaths[tab.id]]);
             }
             console.log("TR " + tab.id + " text updated for " + newPath);
@@ -82,7 +82,12 @@ function getTabTextWithRetry(tab, retries=3) {
         }
         inactivityTimers[tab.id] = setTimeout(() => {
             console.log("TR timer saving " + tab.id);
-            saveText(pathContents[tabPaths[tab.id]]);
+            let pathContent = pathContents[tabPaths[tab.id]];
+            if (pathContent === undefined) {
+                // already saved and cleared
+                return;
+            }
+            saveText(pathContent);
         }, 60000);  // 1 minute
     }).catch(err => {
         if (retries > 0) {
@@ -121,7 +126,6 @@ async function saveText(content) {
         .finally(() => {
             console.log("TR save complete for " + content.url);
             delete pathContents[content.path];
-            delete inactivityTimers[content.path];
         });
 }
 
