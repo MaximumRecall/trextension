@@ -101,6 +101,11 @@ function getTabTextWithRetry(tab, retries=3) {
 }
 
 async function saveText(content) {
+    if (content === undefined) {
+        // already saved and cleared
+        return;
+    }
+
     console.log("TR saving " + content.url);
     let data = await browser.storage.local.get('user');
 
@@ -124,7 +129,6 @@ async function saveText(content) {
         })
         .catch(err => console.error("TR " + err))
         .finally(() => {
-            console.log("TR save complete for " + content.url);
             delete pathContents[content.path];
         });
 }
