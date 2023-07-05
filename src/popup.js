@@ -10,29 +10,30 @@ document.getElementById('index-history').addEventListener('click', async functio
     // Create a queue to hold the history items
     let queue = Array.from(historyItems, item => item.url);
 
-    // Open the first 5 tabs
+    // Create a new window and open the first 5 tabs
     try {
+        let window = await browser.windows.create();
         console.log("opening first 5 tabs");
         for (let i = 0; i < Math.min(5, queue.length); i++) {
             let url = queue.shift();
             console.log("opening " + url);
-            openTab(url);
+            openTab(url, window.id);
         }
     } catch (err) {
-        console.error("Error opening tabs: " + err);
+        console.error("Error opening history window: " + err);
     }
 
     // Define the function for opening a tab and setting up the listener
-    function openTab(url) {
-        browser.tabs.create({ url: url }).then((tab) => {
+    function openTab(url, windowId) {
+        browser.tabs.create({ url: url, windowId: windowId }).then((tab) => {
             let listener = function (tabId, changeInfo) {
-                if (tabId === tab.id && changeInfo.status == 'complete') {
+                if (tabId === tab.id && changeInfo.status === 'complete') {
                     browser.tabs.onUpdated.removeListener(listener);
                     // Close the tab
                     browser.tabs.remove(tabId);
                     // Open the next URL in queue
                     if (queue.length > 0) {
-                        openTab(queue.shift());
+                        openTab(queue.shift(), windowId);
                     }
                 }
             };
