@@ -142,3 +142,81 @@ browser.tabs.onRemoved.addListener((tabId) => {
         saveText(pathContents[tabPaths[tabId]]);
     }
 });
+
+//
+// History loading
+//
+let totalItems = 0;
+let completedItems = 0;
+let newWindowId = null;
+let queue = [];
+
+browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "indexHistory") {
+        indexHistory();
+    }
+});
+
+async function indexHistory() {
+    let historyItems = await browser.history.search({text: '', startTime: 0, maxResults: 9999});
+    console.log("Indexing history with " + historyItems.length + " items");
+    totalItems = historyItems.length;
+
+    // Fill the queue with the history items
+    queue = Array.from(historyItems, item => item.url);
+
+    // Create a new window
+    let newWindow = await browser.windows.create();
+    newWindowId = newWindow.id;
+
+    // Open the first 5 tabs
+    try {
+        console.log("opening first 5 tabs");
+        for (let i = 0; i < Math.min(5, queue.length); i++) {
+            let url = queue.shift();
+            console.log("opening " + url);
+            openTab(url);
+        }
+    } catch (err) {
+        console.error("Error opening tabs: " + err);
+    }
+}
+
+function openTab(url) {
+    browser.tabs.create({ windowId: newWindowId, url: url }).then((tab) => {
+        let listener = function (tabId, changeInfo) {
+            if (tabId === tab.id && changeInfo.status == 'complete') {
+                browser.tabs.onUpdated.removeListener(listener);
+                // Close the tab
+                browser.tabs.remove(tabId);
+                // Update the progress count
+                completedItems++;
+                updateBadgeText();
+                // Open the next URL in queue or close the window if done
+                if (queue.length > 0) {
+                    openTab(queue.shift());
+                } else {
+                    cleanup();
+                }
+            }
+        };
+
+        browser.tabs.onUpdated.addListener(listener);
+    })
+        .catch(err => console.error("Error creating tab: " + err));
+}
+
+function updateBadgeText() {
+    let progress = Math.round((completedItems / totalItems) * 100) + '%';
+    browser.browserAction.setBadgeText({ text: progress });
+    browser.browserAction.setBadgeBackgroundColor({ color: 'blue' });
+}
+
+async function cleanup() {
+    // Remove the badge text
+    browser.browserAction.setBadgeText({ text: "" });
+    // Close the window
+    if (newWindowId !== null) {
+        await browser.windows.remove(newWindowId);
+    }
+}
