@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            width: 400px;
+            height: 200px;
+        }
+    </style>
+</head>
 <body>
-    <button id="search-history">Search History</button>
-    <button id="index-history">Index History</button>
+<div class="container">
+    <div class="row my-2">
+        <div class="col-6">
+            <button id="search-history" class="btn btn-primary btn-block">Search Total Recall</button>
+            <button id="index-history" class="btn btn-primary btn-block mt-2">Load browser history into TR</button>
+        </div>
+        <div class="col-6">
+            <button id="copy-uuid" class="btn btn-secondary btn-block">Copy UUID</button>
+            <button id="set-uuid" class="btn btn-secondary btn-block mt-2">Set UUID</button>
+            <div id="message" class="text-center my-2"></div>
+        </div>
+    </div>
+</div>
 
-    <script src="../config.js"></script>
-    <script src="popup.js"></script>
+<script src="../config.js"></script>
+<script src="popup.js"></script>
 </body>
 </html>
