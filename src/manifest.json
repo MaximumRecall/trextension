@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "Total Recall",
     "description": "This extension processes and stores articles",
-    "version": "0.2",
+    "version": "0.3",
     "background": {
         "scripts": ["config.js", "background.js"],
         "persistent": false

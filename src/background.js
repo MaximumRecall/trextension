@@ -34,7 +34,7 @@ function isSpecialUrl(url) {
         'file:',
         'chrome-extension:',
         'chrome-devtools:',
-        service_url
+        getServiceUrl()
     ];
 
     for (const protocol of specialProtocols) {
@@ -109,6 +109,7 @@ async function saveText(content) {
     console.log("TR saving " + content.url);
     let data = await browser.storage.local.get('user');
 
+    let service_url = await getServiceUrl();
     return fetch(service_url + '/save_if_new', {
         method: 'POST',
         headers: {
